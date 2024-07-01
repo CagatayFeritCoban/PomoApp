@@ -8,7 +8,7 @@ body{
     /* Long Break background-color:#6AB187 ; */
     color: white;
 }
-.Timer{
+.content{
     justify-content: center;
     align-items: center;
     display: flex;
