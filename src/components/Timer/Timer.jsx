@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "./Timer.css";
-
+import useSound from "use-sound";
+import soundEffect from "../../../public/sound/sound-effect.mp3";
 function Timer() {
-  const [breakTime, setBreakTime] = useState(3);
+  const [breakTime, setBreakTime] = useState(0);
   const [time, setTime] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
   const [isShortBreak, setIsShortBreak] = useState(false);
   const [isLongBreak, setIsLongBreak] = useState(false);
   const [isPomodoro, setIsPomodoro] = useState(true);
   const [buttonText, setButtonText] = useState("Start");
+  const [play] = useSound(soundEffect);
 
   useEffect(() => {
     let countdown;
@@ -20,28 +22,32 @@ function Timer() {
           } else {
             clearInterval(countdown);
             setButtonText("Restart");
-            if (isPomodoro) {
-              setBreakTime((prevBreakTime) => prevBreakTime + 1);
-              if (breakTime === 4) {
-                longBreak();
-                setBreakTime(0);
-              } else {
-                shortBreak();
-              }
-            } else if (isShortBreak) {
-              pomodoro();
-            } else if (isLongBreak) {
-              pomodoro();
-            }
+            handleTimerEnd();
             return 0;
           }
         });
       }, 1);
-    }
 
-    return () => clearInterval(countdown);
+      return () => clearInterval(countdown);
+    }
   }, [isActive, isPomodoro, breakTime]);
 
+  const handleTimerEnd = () => {
+    play();
+    console.log("başladı");
+    if (isPomodoro) {
+      setBreakTime((prevBreakTime) => prevBreakTime + 1);
+      if (breakTime === 4) {
+        longBreak();
+      } else {
+        shortBreak();
+      }
+    } else if (isShortBreak) {
+      pomodoro();
+    } else if (isLongBreak) {
+      pomodoro();
+    }
+  };
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
@@ -88,9 +94,9 @@ function Timer() {
     setIsPomodoro(false);
     setIsLongBreak(true);
     setButtonText("Start");
+    setBreakTime(0);
   };
 
-  
   return (
     <div className="content">
       <div className="timerDisplay">
