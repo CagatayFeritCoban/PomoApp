@@ -1,11 +1,14 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./Timer.css";
+
 function Timer() {
-  const [time, setTime] = useState(25 * 60); // 25 dakika
-  const [isActive, setIsActive] = useState(false); // Başlangıçta geri sayım aktif değil
-  const [isShortBreak, setIsShortBreak] = useState(false); // Kısa mola durumu
-  const [buttonText, setButtonText] = useState("Start"); // Başlangıçta buton metni "Start"
+  const [breakTime, setBreakTime] = useState(3);
+  const [time, setTime] = useState(25 * 60);
+  const [isActive, setIsActive] = useState(false);
+  const [isShortBreak, setIsShortBreak] = useState(false);
+  const [isLongBreak, setIsLongBreak] = useState(false);
+  const [isPomodoro, setIsPomodoro] = useState(true);
+  const [buttonText, setButtonText] = useState("Start");
 
   useEffect(() => {
     let countdown;
@@ -16,46 +19,78 @@ function Timer() {
             return prevTime - 1;
           } else {
             clearInterval(countdown);
-            setButtonText("Restart"); // Süre bittiğinde buton metnini "Restart" olarak değiştir
+            setButtonText("Restart");
+            if (isPomodoro) {
+              setBreakTime((prevBreakTime) => prevBreakTime + 1);
+              if (breakTime === 4) {
+                longBreak();
+                setBreakTime(0);
+              } else {
+                shortBreak();
+              }
+            } else if (isShortBreak) {
+              pomodoro();
+            } else if (isLongBreak) {
+              pomodoro();
+            }
             return 0;
           }
         });
       }, 1);
     }
 
-    return () => clearInterval(countdown); // Cleanup fonksiyonu
-  }, [isActive]); // isActive değiştiğinde çalışır
+    return () => clearInterval(countdown);
+  }, [isActive, isPomodoro, breakTime]);
+
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
-    const formattedMinutes = isShortBreak
-      ? minutes
-      : (minutes < 10 ? "0" : "") + minutes;
+    const formattedMinutes = minutes < 10 ? "0" + minutes : minutes;
     const formattedSeconds = seconds < 10 ? "0" + seconds : seconds;
     return `${formattedMinutes}:${formattedSeconds}`;
   };
 
   const toggleTimer = () => {
-    setIsActive(!isActive); // Geri sayımı başlat/durdur
+    setIsActive(!isActive);
     if (!isActive) {
-      setButtonText("Stop"); // Başlatıldığında buton metnini "Stop" olarak değiştir
+      setButtonText("Stop");
     } else {
-      setButtonText("Start"); // Durdurulduğunda buton metnini "Restart" olarak değiştir
+      setButtonText("Start");
     }
   };
 
   const shortBreak = () => {
     document.body.style.backgroundColor = "#89ABE3";
-    setTime(5 * 60); // Set time to 5 minutes
-    setIsShortBreak(true); // Kısa mola durumunu ayarla
-  };
-  const pomodoro = () => {
-    document.body.style.backgroundColor = "#BA4949";
-    setTime(25 * 60); // Set time to 5 minutes
-    setIsShortBreak(false); // Kısa mola durumunu ayarla
+    setTime(5 * 60);
+    setIsShortBreak(true);
+    setIsLongBreak(false);
+    setIsPomodoro(false);
+    setIsActive(false);
+    setButtonText("Start");
   };
 
+  const pomodoro = () => {
+    document.body.style.backgroundColor = "#BA4949";
+    setTime(25 * 60);
+    setIsShortBreak(false);
+    setIsLongBreak(false);
+    setIsPomodoro(true);
+    setIsActive(false);
+    setButtonText("Start");
+  };
+
+  const longBreak = () => {
+    document.body.style.backgroundColor = "#6AB187";
+    setTime(20 * 60);
+    setIsActive(false);
+    setIsShortBreak(false);
+    setIsPomodoro(false);
+    setIsLongBreak(true);
+    setButtonText("Start");
+  };
+
+  
   return (
     <div className="content">
       <div className="timerDisplay">
@@ -67,7 +102,7 @@ function Timer() {
             <button onClick={shortBreak}>Short Break</button>
           </div>
           <div className="longBreak">
-            <button>Long Break</button>
+            <button onClick={longBreak}>Long Break</button>
           </div>
         </div>
         <div className="timer">{formatTime(time)}</div>
@@ -75,6 +110,9 @@ function Timer() {
           <button className="startButton" onClick={toggleTimer}>
             {buttonText}
           </button>
+        </div>
+        <div className="breakTime">
+          <p>Break Time Count: {breakTime}</p>
         </div>
       </div>
     </div>
